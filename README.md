@@ -524,27 +524,28 @@ ApiSettings:BaseUrl
 
 Local application URLs are defined in the projects' launch settings.
 
-## Automated Tests
+## Testing
 
-The Postman collection provides end-to-end API workflow validation, while the .NET test project contains automated business logic tests. Both are included as separate deliverables.
+The solution includes automated tests using **xUnit**, **FluentAssertions**, **Moq**, **EF Core SQLite**, and **ASP.NET Core WebApplicationFactory**.
 
-The test project uses xUnit, Moq, FluentAssertions, and SQLite.
+The test suite contains six tests covering:
 
-Tests cover selected service request business rules, status transitions, and dashboard behavior.
+- Service request state transition validation.
+- Provider assignment restrictions.
+- Role-scoped dashboard statistics.
+- Authentication (`401 Unauthorized`).
+- Role-based authorization (`403 Forbidden`).
+- Vehicle ownership isolation (`404 Not Found`).
 
-Run the test suite:
+Service-level tests use an isolated SQLite database and mocked dependencies. HTTP integration tests use `WebApplicationFactory` to exercise the ASP.NET Core request pipeline without requiring Docker, PostgreSQL, or Redis.
 
-```powershell
+Run the tests from the solution directory:
+
+```bash
 dotnet test --configuration Release
 ```
 
-To build separately:
-
-```powershell
-dotnet restore
-dotnet build --configuration Release
-dotnet test --configuration Release --no-build
-```
+The repository also includes a Postman collection with 30 API requests covering the complete service request lifecycle, alternative workflows, and authorization checks.
 
 ## Example End-to-End Workflow
 

@@ -10,7 +10,7 @@ using VehicleService.Core.Entities;
 using VehicleService.Core.Enums;
 using VehicleService.Tests.Helpers;
 
-namespace Add_VehicleService.Tests.Services
+namespace VehicleService.Tests.Services
 {
 
     public class ServiceRequestServiceTests
