@@ -398,6 +398,103 @@ The PostgreSQL named volume preserves application data across normal container r
 
 Avoid `docker compose down -v` unless you intentionally want to delete the stored data.
 
+## Postman API Collection
+
+An importable Postman Collection v2.1 is included to demonstrate and validate the complete Vehicle Service Request API workflow.
+
+The collection contains **30 requests organized into six folders**, covering authentication, vehicle management, service request lifecycle, dashboard queries, alternative workflows, and authorization checks.
+
+### Collection Files
+
+| File | Description |
+|---|---|
+| `postman/VehicleService.postman_collection.json` | API requests, example payloads, automated assertions, and variable handling |
+| `postman/VehicleService.local.postman_environment.json` | Local Docker environment configuration and variables |
+
+### Import and Configure
+
+1. Start the application using `docker compose up -d --build`.
+2. Open Postman and select **Import**.
+3. Import both JSON files from the `postman/` directory.
+4. Select the **Vehicle Service - Local Docker** environment.
+5. Configure the following environment variables:
+
+| Variable | Description |
+|---|---|
+| `baseUrl` | API base URL, default: `http://localhost:8090` |
+| `adminEmail` | Email of the seeded administrator |
+| `adminPassword` | Password of the seeded administrator |
+| `providerPassword` | Password used for the sample service provider |
+| `ownerPassword` | Password used for the sample vehicle owner |
+
+The collection automatically manages JWT tokens and captures generated IDs, including `vehicleId`, `providerId`, and `serviceRequestId`.
+
+Passwords and authentication tokens should remain in the local Postman environment and must not be committed to the repository.
+
+### Collection Organization
+
+| Folder | Purpose |
+|---|---|
+| 01 - Accounts & Authentication | Admin login, provider creation, owner registration, login, and profile verification |
+| 02 - Owner / Vehicles | Vehicle creation, listing, and retrieval |
+| 03 - Main Service Lifecycle | Create, assign, accept, start, update progress, complete, and close |
+| 04 - Read & Dashboard | Service request queries, timeline, and dashboard summaries |
+| 05 - Alternative Flows | Provider rejection and request cancellation |
+| 06 - Authorization Checks | Authentication, role restrictions, and ownership validation |
+
+### Running the Collection
+
+Open the collection in Postman and select **Run**.
+
+Recommended settings:
+
+- Run type: **Functional**
+- Iterations: **1**
+- Keep variable values: **Enabled**
+- Stop run if an error occurs: **Enabled**
+
+For the complete demonstration, run the collection in its configured request order.
+
+You can also run individual folders. For example, **03 - Main Service Lifecycle** can be executed independently after the authentication and vehicle setup requests have populated the required variables.
+
+The collection includes automated response assertions to validate expected HTTP status codes and key response properties.
+
+### Example Workflow
+
+```text
+Admin Login
+    |
+Create Service Provider
+    |
+Provider Login
+    |
+Owner Registration and Login
+    |
+Create Vehicle
+    |
+Create Service Request (Pending)
+    |
+Assign Provider (Assigned)
+    |
+Provider Accepts (Accepted)
+    |
+Start Service (InProgress)
+    |
+Add Progress
+    |
+Complete Service (Completed)
+    |
+Owner Closes Request (Closed)
+```
+
+Alternative workflows and authorization checks are included to demonstrate rejection, cancellation, and access restrictions.
+
+### Validation
+
+The collection was executed successfully against the Docker-hosted API using Postman's Collection Runner.
+
+The sample requests use environment variables and automatically generated identifiers to reduce manual setup.
+
 ## Running Locally
 
 ### Prerequisites
