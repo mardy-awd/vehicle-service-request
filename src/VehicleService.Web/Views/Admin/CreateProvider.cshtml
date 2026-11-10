@@ -1,0 +1,83 @@
+﻿@model VehicleService.Web.Models.Admin.CreateProviderViewModel
+
+@{
+    ViewData["Title"] = "Create Service Provider";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7 col-xl-6">
+
+        <h2 class="fw-bold mb-2">Create Service Provider</h2>
+        <p class="text-muted mb-4">
+            Register a new service provider account.
+        </p>
+
+        @if (TempData["Success"] is string success)
+        {
+            <div class="alert alert-success alert-dismissible fade show"
+                 role="alert">
+                @success
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Close"></button>
+            </div>
+        }
+
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+
+                <form asp-action="CreateProvider" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div asp-validation-summary="ModelOnly"
+                         class="text-danger mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="FullName"
+                               class="form-label"></label>
+
+                        <input asp-for="FullName"
+                               class="form-control" />
+
+                        <span asp-validation-for="FullName"
+                              class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email"
+                               class="form-label"></label>
+
+                        <input asp-for="Email"
+                               class="form-control" />
+
+                        <span asp-validation-for="Email"
+                              class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Password"
+                               class="form-label"></label>
+
+                        <input asp-for="Password"
+                               class="form-control"
+                               autocomplete="new-password" />
+
+                        <span asp-validation-for="Password"
+                              class="text-danger"></span>
+                    </div>
+
+                    <button type="submit"
+                            class="btn btn-primary">
+                        Create Provider
+                    </button>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

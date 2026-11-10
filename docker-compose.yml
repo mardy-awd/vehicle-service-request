@@ -1,0 +1,66 @@
+﻿services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: vehicleservice
+      POSTGRES_USER: vehicleservice
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vehicleservice -d vehicleservice"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: src/VehicleService.Api/Dockerfile
+    volumes:
+      - api_dataprotection_keys:/root/.aspnet/DataProtection-Keys
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=vehicleservice;Username=vehicleservice;Password=${POSTGRES_PASSWORD};TimeZone=UTC"
+      Redis__ConnectionString: redis:6379
+      SeedAdmin__Email: ${SEED_ADMIN_EMAIL}
+      SeedAdmin__Password: ${SEED_ADMIN_PASSWORD}
+      SeedAdmin__FullName: ${SEED_ADMIN_FULLNAME}
+      Jwt__Issuer: ${JWT_ISSUER}
+      Jwt__Audience: ${JWT_AUDIENCE}
+      Jwt__Key: ${JWT_KEY}
+      Jwt__ExpiryMinutes: 60
+    ports:
+      - "8090:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: src/VehicleService.Web/Dockerfile
+    volumes:
+      - web_dataprotection_keys:/root/.aspnet/DataProtection-Keys  
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ApiSettings__BaseUrl: http://api:8080/
+    ports:
+      - "8081:8080"
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
+  web_dataprotection_keys:
+  api_dataprotection_keys:

@@ -1,0 +1,542 @@
+﻿@using System.Text.RegularExpressions
+@model VehicleService.Web.Models.ServiceRequests.ServiceRequestDetailsViewModel
+
+@{
+
+    ViewData["Title"] = "Service Request Details";
+
+    var request = Model.Request;
+
+    var badgeClass = request.Status switch
+    {
+        "Pending" => "bg-warning text-dark",
+        "Assigned" => "bg-info text-dark",
+        "Accepted" => "bg-primary",
+        "InProgress" => "bg-primary",
+        "Completed" => "bg-success",
+        "Closed" => "bg-secondary",
+        "Cancelled" => "bg-danger",
+        _ => "bg-secondary"
+    };
+}
+
+@functions {
+    private static string FormatLabel(string value)
+    {
+        return Regex.Replace(value, "([a-z])([A-Z])", "$1 $2");
+    }
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold">Service Request Details</h2>
+        <p class="text-muted mb-0">@request.RequestNumber</p>
+    </div>
+
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        Back to Requests
+    </a>
+</div>
+@if (TempData["Success"] is string success)
+{
+    <div id="successAlert"
+         class="alert alert-success alert-dismissible fade show"
+         role="alert">
+        @success
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert"
+                aria-label="Close"></button>
+    </div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger alert-dismissible fade show"
+         role="alert">
+        @error
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert"
+                aria-label="Close">
+        </button>
+    </div>
+}
+<div class="row g-4">
+
+    <div class="col-lg-7">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Request Information</h5>
+            </div>
+
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-5">Request Number</dt>
+                    <dd class="col-sm-7">@request.RequestNumber</dd>
+
+                    <dt class="col-sm-5">Status</dt>
+                    <dd class="col-sm-7">
+                        <span class="badge @badgeClass">
+                            @request.Status
+                        </span>
+                    </dd>
+
+                    <dt class="col-sm-5">Service Type</dt>
+                    <dd class="col-sm-7">@FormatLabel(request.ServiceType)</dd>
+
+                    <dt class="col-sm-5">Preferred Date</dt>
+                    <dd class="col-sm-7">
+                        @request.PreferredServiceAtUtc.ToLocalTime().ToString("dd MMM yyyy HH:mm")
+                    </dd>
+
+                    <dt class="col-sm-5">Time Slot</dt>
+                    <dd class="col-sm-7">@request.TimeSlot</dd>
+
+                    <dt class="col-sm-5">Contact Phone</dt>
+                    <dd class="col-sm-7">@request.ContactPhoneNumber</dd>
+
+                    <dt class="col-sm-5">Pickup Required</dt>
+                    <dd class="col-sm-7">
+                        @(request.PickupRequired ? "Yes" : "No")
+                    </dd>
+
+                    @if (request.PickupRequired)
+                    {
+                        <dt class="col-sm-5">Pickup Address</dt>
+                        <dd class="col-sm-7">@request.PickupAddress</dd>
+                    }
+
+                    <dt class="col-sm-5">Created</dt>
+                    <dd class="col-sm-7">
+                        @request.CreatedAtUtc.ToLocalTime().ToString("dd MMM yyyy HH:mm")
+                    </dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Issue Description</h5>
+            </div>
+
+            <div class="card-body">
+                <p class="mb-0" style="white-space: pre-wrap;">
+                    @request.IssueDescription
+                </p>
+            </div>
+        </div>
+
+        @if (User.IsInRole("Admin") && request.Status == "Pending")
+        {
+            <div class="mt-3">
+                <a asp-action="Assign"
+                   asp-route-id="@request.Id"
+                   class="btn btn-primary">
+                    Assign Service Provider
+                </a>
+            </div>
+        }
+
+        @if (User.IsInRole("ServiceProvider") && request.Status == "Assigned")
+        {
+            <div class="card shadow-sm mt-3">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Provider Actions</h5>
+                </div>
+
+                <div class="card-body">
+                    <div class="d-flex gap-2">
+                        <form asp-action="Accept"
+                              asp-route-id="@request.Id"
+                              method="post">
+                            @Html.AntiForgeryToken()
+
+                            <button type="submit"
+                                    class="btn btn-success">
+                                Accept Request
+                            </button>
+                        </form>
+
+                        <button type="button"
+                                class="btn btn-outline-danger"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#rejectForm"
+                                aria-expanded="false"
+                                aria-controls="rejectForm">
+                            Reject Request
+                        </button>
+                    </div>
+
+                    <div class="collapse mt-3" id="rejectForm">
+                        <form asp-action="Reject" method="post">
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden"
+                                   name="ServiceRequestId"
+                                   value="@request.Id" />
+
+                            <div class="mb-3">
+                                <label for="Reason" class="form-label">
+                                    Rejection Reason
+                                </label>
+
+                                <textarea id="Reason"
+                                      name="Reason"
+                                      class="form-control"
+                                      rows="3"
+                                      minlength="5"
+                                      maxlength="500"
+                                      required></textarea>
+
+                                <div class="form-text">
+                                    Explain why you cannot accept this request.
+                                </div>
+                            </div>
+
+                            <button type="submit"
+                                    class="btn btn-danger">
+                                Confirm Rejection
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (User.IsInRole("ServiceProvider") && request.Status == "Accepted")
+        {
+            <div class="card shadow-sm mt-3">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Start Service</h5>
+                </div>
+
+                <div class="card-body">
+                    <p class="text-muted">
+                        Enter the initial technician notes and expected completion date.
+                    </p>
+
+                    <form asp-action="Start" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden"
+                               name="ServiceRequestId"
+                               value="@request.Id" />
+
+                        <div class="mb-3">
+                            <label for="TechnicianNotes" class="form-label">
+                                Technician Notes
+                            </label>
+
+                            <textarea id="TechnicianNotes"
+                                  name="TechnicianNotes"
+                                  class="form-control"
+                                  rows="3"
+                                  minlength="5"
+                                  maxlength="2000"
+                                  required></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="EstimatedCompletionAtUtc"
+                                   class="form-label">
+                                Estimated Completion
+                            </label>
+
+                            <input type="datetime-local"
+                                   id="EstimatedCompletionAtUtc"
+                                   name="EstimatedCompletionAtUtc"
+                                   class="form-control"
+                                   required />
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            Start Service
+                        </button>
+                    </form>
+                </div>
+            </div>
+        }
+
+        @if (User.IsInRole("ServiceProvider") && request.Status == "InProgress")
+        {
+            <div class="card shadow-sm mt-3">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Add Progress Update</h5>
+                </div>
+
+                <div class="card-body">
+                    <p class="text-muted">
+                        Record the latest technician work or update the expected completion time.
+                    </p>
+
+                    <form asp-action="AddProgress" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden"
+                               name="ServiceRequestId"
+                               value="@request.Id" />
+
+                        <div class="mb-3">
+                            <label for="ProgressTechnicianNotes"
+                                   class="form-label">
+                                Technician Notes
+                            </label>
+
+                            <textarea id="ProgressTechnicianNotes"
+                                  name="TechnicianNotes"
+                                  class="form-control"
+                                  rows="3"
+                                  minlength="5"
+                                  maxlength="2000"
+                                  required></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="ProgressEstimatedCompletion"
+                                   class="form-label">
+                                Updated Estimated Completion
+                                <span class="text-muted">(Optional)</span>
+                            </label>
+
+                            <input type="datetime-local"
+                                   id="ProgressEstimatedCompletion"
+                                   name="EstimatedCompletionAtUtc"
+                                   class="form-control" />
+
+                            <div class="form-text">
+                                Leave empty to keep the current estimated completion time.
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            Save Progress Update
+                        </button>
+                    </form>
+                </div>
+            </div>
+        }
+
+        @if (User.IsInRole("ServiceProvider") && request.Status == "InProgress")
+        {
+            <div class="card shadow-sm mt-3">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Complete Service</h5>
+                </div>
+
+                <div class="card-body">
+                    <p class="text-muted">
+                        Record the completed work and final service amount.
+                    </p>
+
+                    <form asp-action="Complete" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden"
+                               name="ServiceRequestId"
+                               value="@request.Id" />
+
+                        <div class="mb-3">
+                            <label for="CompletionNotes"
+                                   class="form-label">
+                                Completion Notes
+                            </label>
+
+                            <textarea id="CompletionNotes"
+                                  name="CompletionNotes"
+                                  class="form-control"
+                                  rows="4"
+                                  minlength="5"
+                                  maxlength="2000"
+                                  required></textarea>
+
+                            <div class="form-text">
+                                Summarize the work performed and final checks.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="FinalAmount"
+                                   class="form-label">
+                                Final Amount (Optional)
+                            </label>
+
+                            <input type="number"
+                                   id="FinalAmount"
+                                   name="FinalAmount"
+                                   class="form-control"
+                                   min="0"
+                                   step="0.01"
+                                   placeholder="e.g. 2450.00" />
+                        </div>
+
+                        <button type="submit"
+                                class="btn btn-success">
+                            Complete Service
+                        </button>
+                    </form>
+                </div>
+            </div>
+        }
+
+
+        @if (User.IsInRole("Admin") || User.IsInRole("VehicleOwner"))
+        {
+            @if (request.Status == "Completed")
+            {
+                <div class="card shadow-sm mt-3">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Close Service Request</h5>
+                    </div>
+
+                    <div class="card-body">
+                        <p class="text-muted">
+                            The service provider has completed the work.
+                            You can now close this request.
+                        </p>
+
+                        <form asp-action="Close"
+                              asp-route-id="@request.Id"
+                              method="post">
+                            @Html.AntiForgeryToken()
+
+                            <button type="submit"
+                                    class="btn btn-success">
+                                Close Request
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+
+            @if (request.Status == "Pending")
+            {
+                <div class="card shadow-sm mt-3">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Cancel Service Request</h5>
+                    </div>
+
+                    <div class="card-body">
+                        <p class="text-muted">
+                            You can cancel this request before it is assigned.
+                        </p>
+
+                        <form asp-action="Cancel" method="post">
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden"
+                                   name="ServiceRequestId"
+                                   value="@request.Id" />
+
+                            <div class="mb-3">
+                                <label for="CancellationReason"
+                                       class="form-label">
+                                    Cancellation Reason
+                                </label>
+
+                                <textarea id="CancellationReason"
+                                  name="Reason"
+                                  class="form-control"
+                                  rows="3"
+                                  minlength="5"
+                                  maxlength="500"
+                                  required></textarea>
+                            </div>
+
+                            <button type="submit"
+                                    class="btn btn-outline-danger">
+                                Cancel Request
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+        }
+
+    </div>
+    <div class="col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Service Timeline</h5>
+            </div>
+
+            <div class="card-body">
+                @if (!Model.Timeline.Events.Any())
+                {
+                    <p class="text-muted mb-0">
+                        No timeline events available.
+                    </p>
+                }
+                else
+                {
+                    @foreach (var item in Model.Timeline.Events.OrderByDescending(x => x.OccurredAtUtc))
+                    {
+                        var isStatusChange =
+                        item.FromStatus != null ||
+                        item.ToStatus != null;
+
+                        <div class="border-start border-3 border-primary ps-3 mb-4">
+
+                            <div class="fw-semibold">
+                                @if (isStatusChange)
+                                {
+                                    @FormatLabel(item.FromStatus ?? "Created")
+                                    <span>→</span>
+                                    @FormatLabel(item.ToStatus ?? "")
+                                }
+                                else
+                                {
+                                    @FormatLabel(item.EventType)
+                                }
+                            </div>
+
+                            <small class="text-muted">
+                                @item.OccurredAtUtc.ToLocalTime().ToString("dd MMM yyyy HH:mm")
+                            </small>
+
+                            @if (!string.IsNullOrWhiteSpace(item.Notes))
+                            {
+                                <p class="mt-2 mb-1">
+                                    @item.Notes
+                                </p>
+                            }
+
+                            @if (item.EstimatedCompletionAtUtc.HasValue)
+                            {
+                                <div class="small text-muted mt-2">
+                                    Estimated completion:
+                                    @(item.EstimatedCompletionAtUtc.Value.ToLocalTime().ToString("dd MMM yyyy HH:mm"))
+                                </div>
+                            }
+
+                            @if (item.FinalAmount.HasValue)
+                            {
+                                <div class="small mt-2">
+                                    Final amount:
+                                    <strong>
+                                        @item.FinalAmount.Value.ToString("N2")
+                                    </strong>
+                                </div>
+                            }
+
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const alert = document.getElementById("successAlert");
+
+            if (alert) {
+                setTimeout(() => {
+                    bootstrap.Alert.getOrCreateInstance(alert).close();
+                }, 5000);
+            }
+        });
+    </script>
+}

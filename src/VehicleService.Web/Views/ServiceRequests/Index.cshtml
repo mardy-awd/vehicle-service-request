@@ -1,0 +1,171 @@
+﻿@model VehicleService.Web.Models.Common.PagedResultViewModel<VehicleService.Web.Models.ServiceRequests.ServiceRequestViewModel>
+
+@{
+    ViewData["Title"] = "Service Requests";
+    var selectedStatus = ViewBag.SelectedStatus as string;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold">Service Requests</h2>
+        <p class="text-muted mb-0">
+            View and track vehicle service requests.
+        </p>
+    </div>
+
+    @if (User.IsInRole("VehicleOwner"))
+    {
+        <a asp-action="Create" class="btn btn-primary">
+            New Service Request
+        </a>
+    }
+</div>
+
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+
+<form method="get" asp-action="Index" class="row g-2 mb-4">
+    <div class="col-md-4">
+        <select name="status" class="form-select">
+            <option value="">All Statuses</option>
+            @foreach (var status in new[]
+                        {
+                        "Pending", "Assigned", "Accepted",
+                        "InProgress", "Completed", "Closed", "Cancelled"
+                        })
+            {
+                <option value="@status"
+                        selected="@(selectedStatus == status)">
+                    @status
+                </option>
+            }
+        </select>
+    </div>
+
+    <div class="col-auto">
+        <button type="submit" class="btn btn-outline-primary">
+            Filter
+        </button>
+    </div>
+</form>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        @if (!Model.Items.Any())
+        {
+            <div class="text-center py-5">
+                <h5>No service requests found</h5>
+                <p class="text-muted mb-0">
+                    There are no requests matching your filters.
+                </p>
+            </div>
+        }
+        else
+        {
+            @if (TempData["Success"] is string success)
+            {
+                <div id="successAlert"
+                     class="alert alert-success alert-dismissible fade show"
+                     role="alert">
+                    @success
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="alert"
+                            aria-label="Close">
+                    </button>
+                </div>
+            }
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Request #</th>
+                            <th>Service</th>
+                            <th>Status</th>
+                            <th>Preferred Date</th>
+                            <th>Created</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var request in Model.Items)
+                        {
+                            var badgeClass = request.Status switch
+                            {
+                                "Pending" => "bg-warning text-dark",
+                                "Assigned" => "bg-info text-dark",
+                                "Accepted" => "bg-primary",
+                                "InProgress" => "bg-primary",
+                                "Completed" => "bg-success",
+                                "Closed" => "bg-secondary",
+                                "Cancelled" => "bg-danger",
+                                _ => "bg-secondary"
+                            };
+
+                            <tr>
+                                <td class="fw-semibold">
+                                    @request.RequestNumber
+                                </td>
+                                <td>@request.ServiceType</td>
+                                <td>
+                                    <span class="badge @badgeClass">
+                                        @request.Status
+                                    </span>
+                                </td>
+                                <td>
+                                    @request.PreferredServiceAtUtc.ToLocalTime().ToString("dd MMM yyyy HH:mm")
+                                </td>
+                                <td>
+                                    @request.CreatedAtUtc.ToLocalTime().ToString("dd MMM yyyy")
+                                </td>
+                                <td>
+                                    <a asp-action="Details"
+                                       asp-route-id="@request.Id"
+                                       class="btn btn-sm btn-outline-primary">
+                                        Details
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+@if (Model.TotalPages > 1)
+{
+    <nav class="mt-4" aria-label="Service request pages">
+        <ul class="pagination justify-content-center">
+            @for (var pageNumber = 1; pageNumber <= Model.TotalPages; pageNumber++)
+            {
+                <li class="page-item @(pageNumber == Model.Page ? "active" : "")">
+                    <a class="page-link"
+                       asp-action="Index"
+                       asp-route-page="@pageNumber"
+                       asp-route-status="@selectedStatus">
+                        @pageNumber
+                    </a>
+                </li>
+            }
+        </ul>
+    </nav>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const alertElement = document.getElementById("successAlert");
+
+            if (alertElement) {
+                setTimeout(function () {
+                    bootstrap.Alert.getOrCreateInstance(alertElement).close();
+                }, 5000);
+            }
+        });
+    </script>
+}

@@ -1,0 +1,22 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+COPY ["src/VehicleService.Web/VehicleService.Web.csproj", "src/VehicleService.Web/"]
+
+RUN dotnet restore "src/VehicleService.Web/VehicleService.Web.csproj"
+
+COPY . .
+
+RUN dotnet publish "src/VehicleService.Web/VehicleService.Web.csproj" \
+    -c Release \
+    -o /app/publish \
+    --no-restore
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+WORKDIR /app
+
+COPY --from=build /app/publish .
+
+EXPOSE 8080
+
+ENTRYPOINT ["dotnet", "VehicleService.Web.dll"]

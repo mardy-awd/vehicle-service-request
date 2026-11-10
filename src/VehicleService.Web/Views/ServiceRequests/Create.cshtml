@@ -1,0 +1,179 @@
+﻿@model VehicleService.Web.Models.ServiceRequests.CreateServiceRequestViewModel
+
+@{
+    ViewData["Title"] = "New Service Request";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+
+        <div class="mb-4">
+            <h2 class="fw-bold">New Service Request</h2>
+            <p class="text-muted">
+                Submit a maintenance request for your vehicle.
+            </p>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+
+                <form asp-action="Create" method="post">
+
+                    <div asp-validation-summary="ModelOnly"
+                         class="text-danger mb-3"></div>
+
+                    <div class="row g-3">
+
+                        <div class="col-md-12">
+                            <label asp-for="VehicleId"
+                                   class="form-label">Vehicle</label>
+
+                            <select asp-for="VehicleId"
+                                    asp-items="Model.Vehicles"
+                                    class="form-select">
+                                <option value="">Select a vehicle</option>
+                            </select>
+
+                            <span asp-validation-for="VehicleId"
+                                  class="text-danger"></span>
+
+                            @if (!Model.Vehicles.Any())
+                            {
+                                <div class="mt-2">
+                                    <a asp-controller="Vehicles"
+                                       asp-action="Create">
+                                        Register a vehicle first
+                                    </a>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="ServiceType"
+                                   class="form-label">Service Type</label>
+
+                            <select asp-for="ServiceType"
+                                    class="form-select">
+                                <option value="">Select service</option>
+                                <option value="GeneralService">General Service</option>
+                                <option value="OilChange">Oil Change</option>
+                                <option value="BrakeRepair">Brake Repair</option>
+                                <option value="TyreChange">Tyre Change</option>
+                                <option value="ACRepair">AC Repair</option>
+                                <option value="Inspection">Inspection</option>
+                                <option value="Other">Other</option>
+                            </select>
+
+                            <span asp-validation-for="ServiceType"
+                                  class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="TimeSlot"
+                                   class="form-label">Preferred Time Slot</label>
+
+                            <select asp-for="TimeSlot"
+                                    class="form-select">
+                                <option value="">Select time slot</option>
+                                <option value="Morning">Morning</option>
+                                <option value="Afternoon">Afternoon</option>
+                                <option value="Evening">Evening</option>
+                            </select>
+
+                            <span asp-validation-for="TimeSlot"
+                                  class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="PreferredServiceAtUtc"
+                                   class="form-label"></label>
+
+                            <input asp-for="PreferredServiceAtUtc"
+                                   type="datetime-local"
+                                   asp-format="{0:yyyy-MM-ddTHH:mm}"
+                                   class="form-control" />
+
+                            <span asp-validation-for="PreferredServiceAtUtc"
+                                  class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="ContactPhoneNumber"
+                                   class="form-label"></label>
+
+                            <input asp-for="ContactPhoneNumber"
+                                   class="form-control" />
+
+                            <span asp-validation-for="ContactPhoneNumber"
+                                  class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="IssueDescription"
+                                   class="form-label"></label>
+
+                            <textarea asp-for="IssueDescription"
+                                      rows="4"
+                                      class="form-control"></textarea>
+
+                            <span asp-validation-for="IssueDescription"
+                                  class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input asp-for="PickupRequired"
+                                       class="form-check-input" />
+
+                                <label asp-for="PickupRequired"
+                                       class="form-check-label"></label>
+                            </div>
+                        </div>
+
+                        <div class="col-12" id="pickupAddressContainer">
+                            <label asp-for="PickupAddress"
+                                   class="form-label"></label>
+
+                            <input asp-for="PickupAddress"
+                                   class="form-control" />
+
+                            <span asp-validation-for="PickupAddress"
+                                  class="text-danger"></span>
+                        </div>
+
+                    </div>
+
+                    <div class="mt-4 d-flex gap-2">
+                        <button type="submit"
+                                class="btn btn-primary">
+                            Submit Request
+                        </button>
+
+                        <a asp-action="Index"
+                           class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        const pickupCheckbox = document.getElementById("PickupRequired");
+        const pickupContainer = document.getElementById("pickupAddressContainer");
+
+        function togglePickupAddress() {
+            pickupContainer.style.display =
+                pickupCheckbox.checked ? "block" : "none";
+        }
+
+        pickupCheckbox.addEventListener("change", togglePickupAddress);
+        togglePickupAddress();
+    </script>
+}
