@@ -13,7 +13,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VehicleService.Api", "src\V
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VehicleService.Web", "src\VehicleService.Web\VehicleService.Web.csproj", "{B87F5C0C-0C16-4260-B5D2-04905E084DA7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Add VehicleService.Tests", "tests\Add VehicleService.Tests\Add VehicleService.Tests.csproj", "{B3B7C455-D603-459B-8EC5-C14F2E9A8337}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VehicleService.Tests", "tests\Add VehicleService.Tests\VehicleService.Tests.csproj", "{B3B7C455-D603-459B-8EC5-C14F2E9A8337}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
