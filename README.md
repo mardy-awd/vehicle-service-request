@@ -526,6 +526,8 @@ Local application URLs are defined in the projects' launch settings.
 
 ## Automated Tests
 
+The Postman collection provides end-to-end API workflow validation, while the .NET test project contains automated business logic tests. Both are included as separate deliverables.
+
 The test project uses xUnit, Moq, FluentAssertions, and SQLite.
 
 Tests cover selected service request business rules, status transitions, and dashboard behavior.
